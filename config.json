@@ -1,0 +1,11 @@
+{
+	"ROOT_DIRECTORY": "U:\\Movies",
+	"DIRECTORY_SEPARATOR": "\\",
+	"LANG_DIRECTORY": "English",
+	"EXPORT_DIRECTORY": "D:\\Yuvraj\\Work\\Movie Analyzer\\app\\resources\\data\\",
+	"PROD_DIRECTORY": "D:\\Yuvraj\\Work\\yuvrajpatil.com\\SourceCode\\collections\\movies\\app\\resources\\data\\",
+	"EXPORT_DIRECTORIES": [
+		"D:\\Yuvraj\\Work\\Movie Analyzer\\app\\resources\\data\\",
+		"D:\\Yuvraj\\Work\\yuvrajpatil.com\\SourceCode\\collections\\movies\\app\\resources\\data\\"
+	]
+}
