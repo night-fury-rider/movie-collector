@@ -206,7 +206,7 @@ class MovieCollectorClient {
         } catch (IndexOutOfBoundsException exception) {
             log(exception);
         } catch (NumberFormatException e) {
-            log(e);
+            log("ERROR in Number parsing" + e + "\n" + "Source: " + fileName);
         }
         return movie;
     }
