@@ -3,7 +3,6 @@
 	"DIRECTORY_SEPARATOR": "//",
 	"LANG_DIRECTORY": "English",
 	"EXPORT_DIRECTORIES": [
-		"/media/yuvraj/Fun/",
 		"/media/yuvraj/Data/Work/zProjects and POCs/Movie Analyzer/SourceCode/movie-analyzer/app/resources/data/"
 	]
 }
