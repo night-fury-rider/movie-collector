@@ -74,7 +74,7 @@ class MovieCollectorClient {
             }
             log("Movies Collection Analysis Successful");
         } catch (Exception e) {
-            log("ERROR: " + e);
+            error(e);
         }
     }
 
@@ -263,5 +263,8 @@ class MovieCollectorClient {
 
     private static void log(Object msg) {
         System.out.println("INFO: " + msg);
+    }
+    private static void error(Object msg) {
+        System.out.println("ERROR: " + msg);
     }
 }
