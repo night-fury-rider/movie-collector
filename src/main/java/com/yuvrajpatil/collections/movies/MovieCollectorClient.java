@@ -9,9 +9,21 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JTextArea;
+
 import com.yuvrajpatil.movies.beans.Movie;
 
 import java.io.FileReader;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+import javax.swing.WindowConstants;
 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
@@ -31,6 +43,7 @@ class MovieCollectorClient {
     final static String DIRECTORY_SEPARATOR;
     final static String LANG_DIRECTORY;
     final static String EXPORT_DIRECTORIES[];
+    static boolean isExportFailed;
 
     static {
         JSONParser parser = new JSONParser();
@@ -48,7 +61,6 @@ class MovieCollectorClient {
         }
 
         ROOT_DIRECTORY = (String) jsonObject.get("ROOT_DIRECTORY");
-        //  DIRECTORY_SEPARATOR = (String) jsonObject.get("DIRECTORY_SEPARATOR");
         DIRECTORY_SEPARATOR = System.getProperties().get("file.separator").toString();
         LANG_DIRECTORY = (String) jsonObject.get("LANG_DIRECTORY");
 
@@ -59,26 +71,71 @@ class MovieCollectorClient {
         for (int i = 0; i < exportDirectories.size(); i++) {
             EXPORT_DIRECTORIES[i] = (String) exportDirectories.get(i);
         }
-
     }
 
     /**
      * @param args
      */
     public static void main(String[] args) {
-        try {
-            final File folder = new File(ROOT_DIRECTORY + DIRECTORY_SEPARATOR + LANG_DIRECTORY);
-            for (final File fileEntry : folder.listFiles()) {
-                printDirectories(ROOT_DIRECTORY + DIRECTORY_SEPARATOR + LANG_DIRECTORY,
-                        fileEntry.getName());
+        
+        JFrame frame = new JFrame("Movie Collector");
+        frame.setSize(500, 200);
+        frame.setLocation(300, 200);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        
+        JLabel sourceLabel = new JLabel("Source");
+        sourceLabel.setBounds(25, 31, 100, 14);
+        frame.getContentPane().add(sourceLabel);
+        
+        final JTextField sourcePathValue = new JTextField(ROOT_DIRECTORY + DIRECTORY_SEPARATOR + LANG_DIRECTORY);
+        sourcePathValue.setBounds(128, 28, 300, 20);
+        frame.getContentPane().add(sourcePathValue);
+        sourcePathValue.setColumns(10);
+        
+        JLabel destinationLabel = new JLabel("Destination");
+        destinationLabel.setBounds(25, 80, 100, 14);
+        frame.getContentPane().add(destinationLabel);
+        
+        final JTextField destinationPathValue = new JTextField(EXPORT_DIRECTORIES[0]);
+        destinationPathValue.setBounds(128, 80, 300, 20);
+        frame.getContentPane().add(destinationPathValue);
+        destinationPathValue.setColumns(10);
+        
+        final JTextArea textArea = new JTextArea(10, 40);
+        textArea.setEditable(false);
+        frame.getContentPane().add(BorderLayout.CENTER, textArea);
+        
+        final JButton button = new JButton("Collect Movies Info");
+        frame.getContentPane().add(BorderLayout.SOUTH, button);
+        
+        button.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                isExportFailed = false;
+                try {
+                    final File folder = new File(sourcePathValue.getText());
+                    for (final File fileEntry : folder.listFiles()) {
+                        if(isExportFailed) {
+                            break;
+                        }
+                        printDirectories(ROOT_DIRECTORY + DIRECTORY_SEPARATOR + LANG_DIRECTORY,
+                                fileEntry.getName(), destinationPathValue.getText());
+                    }
+                    if(!isExportFailed) {
+                        log("Movies Collection Analysis Successful");
+                        JOptionPane.showMessageDialog(null, "Movies Collection Analysis Successful");
+                    }
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(null, "Movies Collection Failure.\nPlease make sure Source Device is connected.\nPlease make sure Paths are correct.", null, JOptionPane.ERROR_MESSAGE);
+                    error(e);
+                }
             }
-            log("Movies Collection Analysis Successful");
-        } catch (Exception e) {
-            error(e);
-        }
+        });
+        frame.setVisible(true);
     }
 
-    private static void printDirectories(String rootDirectory, String category) {
+    private static void printDirectories(String rootDirectory, String category, String exportDirectory) {
         final File folder = new File(rootDirectory + DIRECTORY_SEPARATOR + category);
 
         List<Movie> movieCollection = new ArrayList<Movie>();
@@ -93,14 +150,11 @@ class MovieCollectorClient {
             movieCollection.addAll(tmpSeries);
         }
 
-        for (String exportDirectory : EXPORT_DIRECTORIES) {
-            exportCollection(movieCollection, exportDirectory, category);
-        }
+        exportCollection(movieCollection, exportDirectory, category);
 
     }
 
     private static List<Movie> getSeries(File folder) {
-        //  Series movieSeries = new Series();
 
         List<Movie> movies = new ArrayList<Movie>();
 
@@ -178,7 +232,8 @@ class MovieCollectorClient {
             buffWriter.write(collection.toString());
             buffWriter.close();
         } catch (Exception e) {
-            log("ERROR in exporting data : " + e);
+            error("ERROR in exporting data : " + e);
+            isExportFailed = true;
         }
     }
 
@@ -188,9 +243,7 @@ class MovieCollectorClient {
         int endIndex = movieName.indexOf(")");
 
         if (startIndex == -1 || endIndex == -1 || startIndex == 0 || endIndex == 0) {
-            log("Naming standards are not followed by: " + movieName);
-            logOut("Year of release is not specified as per standards");
-
+            logOut("Naming standards are not followed by: " + movieName);
         }
         String fileName = movie.getFileName().toLowerCase();
 
@@ -204,9 +257,9 @@ class MovieCollectorClient {
             movie.setYear(Integer.parseInt(movieName.substring(startIndex + 1,
                     endIndex)));
         } catch (IndexOutOfBoundsException exception) {
-            log(exception);
+            logOut(exception);
         } catch (NumberFormatException e) {
-            log("ERROR in Number parsing" + e + "\n" + "Source: " + fileName);
+            logOut("ERROR in Number parsing" + e + "\n" + "Source: " + fileName);
         }
         return movie;
     }
@@ -241,6 +294,7 @@ class MovieCollectorClient {
     }
 
     private static boolean isValidFile(String fileName) {
+        fileName = fileName.toLowerCase();
         if (fileName.contains(".srt")
                 || fileName.contains(".rar")
                 || fileName.contains(".db")
@@ -254,11 +308,13 @@ class MovieCollectorClient {
 
     private static void logOut(Object msg) {
         System.out.println("\nFATAL ERROR: " + msg);
+        JOptionPane.showMessageDialog(null, "\nFATAL ERROR: " + msg, null, JOptionPane.ERROR_MESSAGE);
         System.exit(0);
     }
 
     private static void warn(Object msg) {
         System.out.println("WARNING: " + msg);
+        JOptionPane.showMessageDialog(null, "\nWARNING ERROR: " + msg, null, JOptionPane.WARNING_MESSAGE);
     }
 
     private static void log(Object msg) {
@@ -266,5 +322,6 @@ class MovieCollectorClient {
     }
     private static void error(Object msg) {
         System.out.println("ERROR: " + msg);
+        JOptionPane.showMessageDialog(null, "ERROR: " + msg, null, JOptionPane.ERROR_MESSAGE);
     }
 }
